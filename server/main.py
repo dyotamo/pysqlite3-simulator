@@ -10,7 +10,7 @@ import hashlib
 
 if __name__ == '__main__':
     
-    c = sqlite3.connect('database')
+    c = sqlite3.connect('db/database')
     c.execute('CREATE TABLE IF NOT EXISTS user(username varchar(35) PRIMARY KEY, passwd VARCHAR(35))')
     
     sockobj = socket(AF_INET, SOCK_STREAM)

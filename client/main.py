@@ -1,50 +1,43 @@
 # -*- coding: utf-8 -*-
 
-from socket import *
-
 import pickle
 import getpass
+import socket
+
+SERVER = '127.0.0.1'
+PORT = 3000
 
 try:
-    
-    username = raw_input('Username: ')
-    passwd = getpass.getpass('Password: ')
+    username = input('Usuário: ')
+    passwd = getpass.getpass('Senha: ')
 
-    sockobj = socket(AF_INET, SOCK_STREAM)
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.connect((SERVER, PORT))
+        sock.send(pickle.dumps(
+            dict(what='auth', username=username, passwd=passwd)))
 
-    sockobj.connect(('127.0.0.1', 3001)) # make a TCP/IP socket object
-    sockobj.send(pickle.dumps({'what': 'auth', 'username': username, 'passwd': passwd}))
-    
-    data = sockobj.recv(1024)
-    response = pickle.loads(data)
-    
-    sockobj.close()
-  
-    if response['status'] == 'ok':
+        data = sock.recv(1024)
+        response = pickle.loads(data)
 
-        while True:
-            prompt = raw_input('$ ').strip()
-            
-            sockobj = socket(AF_INET, SOCK_STREAM)
-            sockobj.connect(('127.0.0.1', 3001)) # make a TCP/IP socket object
-            sockobj.send(pickle.dumps({'what': 'oter', 'content': prompt}))
-            
-            data = sockobj.recv(1024)
-            response = pickle.loads(data)
-            
-            if response['what'] == 'db_error':
-                print 'Erro: ' + str(response['message'])
-            elif response['what'] == 'db_cursor':
-                for x in response['cursor']:
-                    print x
-            else:
-                print 'OK'
-            
-    else:
-        print 'Usuário e senha não combinam'
+        if response['status'] == 'ok':
+            while True:
+                prompt = input('$ ').strip()
 
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.connect((SERVER, PORT))
+                sock.send(pickle.dumps(dict(what='oter', content=prompt)))
+
+                data = sock.recv(1024)
+                response = pickle.loads(data)
+
+                if response['what'] == 'db_error':
+                    print('Erro: {}'.format(response['message']))
+                elif response['what'] == 'db_cursor':
+                    for line in response['cursor']:
+                        print(line)
+                else:
+                    print('OK')
+        else:
+            print('Usuário e senha não combinam')
 except KeyboardInterrupt:
-    print 'Cliente encerrado\n'
-except error, excp:
-    print excp
-    
+    print('Cliente encerrado')

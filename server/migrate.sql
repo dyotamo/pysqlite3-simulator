@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS user(username varchar(35) PRIMARY KEY, passwd VARCHAR(35));
